@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "Affinity Meeting Notes",
+    "slug": "affinity-meeting-notes",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "affinitymeetingnotes",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "edgeToEdgeEnabled": true
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}
