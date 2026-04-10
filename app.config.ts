@@ -6,10 +6,15 @@ import withBackgroundAudio from "./plugins/withBackgroundAudio.js";
 
 const googleServicesFilePath = "./google-services.json";
 const hasGoogleServicesFile = existsSync(googleServicesFilePath);
+const appIconPath = "./assets/icon.png";
 
 export default ({config} : ConfigContext) : ExpoConfig=> ({
   ...config,
   android: {
+    adaptiveIcon: {
+      backgroundColor: "#FFFFFF",
+      foregroundImage: appIconPath
+    },
     edgeToEdgeEnabled: true,
     package: "com.anonymous.affinitymeetingnotes",
     ...(hasGoogleServicesFile
@@ -28,8 +33,10 @@ export default ({config} : ConfigContext) : ExpoConfig=> ({
   experiments: {
     typedRoutes: true
   },
+  icon: appIconPath,
   ios: {
     bundleIdentifier: "com.anonymous.affinity-meeting-notes",
+    icon: appIconPath,
     supportsTablet: true
   },
   name: "Affinity Meeting Notes",
