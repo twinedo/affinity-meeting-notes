@@ -7,12 +7,15 @@
     "scheme": "affinitymeetingnotes",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router"
+    ],
     "experiments": {
       "typedRoutes": true
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.anonymous.affinity-meeting-notes"
     },
     "android": {
       "edgeToEdgeEnabled": true
