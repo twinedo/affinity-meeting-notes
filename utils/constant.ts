@@ -1,5 +1,7 @@
 export const MEETINGS_TABLE = "meetings";
 export const SUPABASE_STORAGE_BUCKET = "meeting-audio";
+export const BACKEND_MISSING_ENV_MESSAGE =
+  "Set EXPO_PUBLIC_BACKEND_URL to enable backend meeting processing.";
 
 export const DEFAULT_EMPTY_SUMMARY =
   "Summary will appear here after meeting processing is connected.";

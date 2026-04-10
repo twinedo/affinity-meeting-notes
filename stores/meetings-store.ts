@@ -1,6 +1,7 @@
 import { create } from "zustand";
 
 import { Meeting } from "../types/meeting";
+import { processMeeting } from "../utils/backend";
 import {
   createMeetingFromRecording,
   getMeetingById,
@@ -28,12 +29,28 @@ export const useMeetingsStore = create<MeetingsStore>((set, get) => ({
     set({ errorMessage: null, isSaving: true });
 
     try {
-      const meeting = await createMeetingFromRecording(input);
+      const createdMeeting = await createMeetingFromRecording(input);
+      const meeting = createdMeeting.meeting;
 
       set((state) => ({
         isSaving: false,
         meetings: upsertMeeting(state.meetings, meeting)
       }));
+
+      void processMeeting({
+        audioUrl: createdMeeting.audioUrl,
+        meetingId: meeting.id,
+        pushToken: null
+      })
+        .then(async () => {
+          await get().fetchMeetingById(meeting.id);
+        })
+        .catch(async (error) => {
+          set({
+            errorMessage: getErrorMessage(error)
+          });
+          await get().fetchMeetingById(meeting.id);
+        });
 
       return meeting;
     } catch (error) {

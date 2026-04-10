@@ -13,6 +13,10 @@ export function getMeetingStatusLabel(status: MeetingStatus): string {
     return "Uploaded";
   }
 
+  if (status === "failed") {
+    return "Failed";
+  }
+
   return "Processing...";
 }
 
@@ -36,6 +40,7 @@ export function formatRecordingTimer(durationMillis: number): string {
 
 export function mapMeetingRecordToMeeting(
   record: MeetingRecord,
+  audioUrl: string | null = null,
   localAudioFileUri: string | null = null
 ): Meeting {
   const createdAt = new Date(record.created_at);
@@ -54,6 +59,7 @@ export function mapMeetingRecordToMeeting(
     summary,
     transcript,
     audioPath: record.audio_path,
+    audioUrl,
     localAudioFileUri,
     createdAtIso: record.created_at,
     updatedAtIso: record.updated_at,
@@ -76,6 +82,10 @@ function buildMeetingPreview(
 
   if (status === "uploaded") {
     return "Audio uploaded to Supabase Storage. Awaiting processing...";
+  }
+
+  if (status === "failed") {
+    return "Processing failed. Check backend logs and try again.";
   }
 
   return "Transcript generation is still processing...";

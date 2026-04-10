@@ -11,6 +11,11 @@ type RecordingUploadInput = {
   durationMillis: number;
 };
 
+export type CreatedMeetingRecord = {
+  audioUrl: string;
+  meeting: Meeting;
+};
+
 export async function listMeetings(): Promise<Meeting[]> {
   const client = getSupabaseClient();
   const { data, error } = await client
@@ -25,7 +30,7 @@ export async function listMeetings(): Promise<Meeting[]> {
   }
 
   return ((data ?? []) as MeetingRecord[]).map((record) =>
-    mapMeetingRecordToMeeting(record)
+    mapMeetingRecordToMeeting(record, getAudioUrl(record.audio_path))
   );
 }
 
@@ -47,12 +52,15 @@ export async function getMeetingById(id: string): Promise<Meeting | null> {
     return null;
   }
 
-  return mapMeetingRecordToMeeting(data as MeetingRecord);
+  return mapMeetingRecordToMeeting(
+    data as MeetingRecord,
+    getAudioUrl((data as MeetingRecord).audio_path)
+  );
 }
 
 export async function createMeetingFromRecording(
   input: RecordingUploadInput
-): Promise<Meeting> {
+): Promise<CreatedMeetingRecord> {
   const client = getSupabaseClient();
   const audioPath = buildStoragePath(input.audioFileUri);
   const fileBase64 = await FileSystem.readAsStringAsync(input.audioFileUri, {
@@ -88,10 +96,20 @@ export async function createMeetingFromRecording(
     throw error;
   }
 
-  return mapMeetingRecordToMeeting(
-    data as MeetingRecord,
-    input.audioFileUri
-  );
+  const audioUrl = getAudioUrl(audioPath);
+
+  if (!audioUrl) {
+    throw new Error("Unable to create a public URL for the uploaded audio file.");
+  }
+
+  return {
+    audioUrl,
+    meeting: mapMeetingRecordToMeeting(
+      data as MeetingRecord,
+      audioUrl,
+      input.audioFileUri
+    )
+  };
 }
 
 function getSupabaseClient() {
@@ -108,6 +126,19 @@ function buildStoragePath(audioFileUri: string): string {
   const suffix = Math.random().toString(36).slice(2, 8);
 
   return `recordings/${timestamp}-${suffix}.${extension}`;
+}
+
+function getAudioUrl(audioPath: string | null): string | null {
+  if (!audioPath) {
+    return null;
+  }
+
+  const client = getSupabaseClient();
+  const { data } = client.storage
+    .from(SUPABASE_STORAGE_BUCKET)
+    .getPublicUrl(audioPath);
+
+  return data.publicUrl;
 }
 
 function getAudioFileExtension(audioFileUri: string): string {

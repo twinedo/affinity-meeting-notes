@@ -1,4 +1,8 @@
-export type MeetingStatus = "processing" | "uploaded" | "completed";
+export type MeetingStatus =
+  | "processing"
+  | "uploaded"
+  | "completed"
+  | "failed";
 
 export type Meeting = {
   id: string;
@@ -9,6 +13,7 @@ export type Meeting = {
   summary: string;
   transcript: string;
   audioPath: string | null;
+  audioUrl: string | null;
   localAudioFileUri: string | null;
   createdAtIso: string;
   updatedAtIso: string;

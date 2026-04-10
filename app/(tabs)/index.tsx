@@ -77,8 +77,8 @@ export default function HomeScreen() {
           {recordingController.isRecording
             ? `Recording now • ${recordingController.timerLabel}`
             : isSaving
-              ? "Uploading audio to Supabase and creating the meeting..."
-              : "Tap to record. Audio uploads to Supabase after you stop."}
+              ? "Uploading audio to Supabase and starting backend processing..."
+              : "Tap to record. Audio uploads first, then the backend processes notes."}
         </Text>
 
         {combinedErrorMessage ? (

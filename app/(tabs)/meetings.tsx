@@ -50,6 +50,8 @@ export default function MeetingsScreen() {
                   styles.statusPill,
                   meeting.status === "completed"
                     ? styles.completedPill
+                    : meeting.status === "failed"
+                      ? styles.failedPill
                     : meeting.status === "uploaded"
                       ? styles.uploadedPill
                       : styles.processingPill
@@ -60,6 +62,8 @@ export default function MeetingsScreen() {
                     styles.statusText,
                     meeting.status === "completed"
                       ? styles.completedText
+                      : meeting.status === "failed"
+                        ? styles.failedText
                       : meeting.status === "uploaded"
                         ? styles.uploadedText
                       : styles.processingText
@@ -140,6 +144,9 @@ const styles = StyleSheet.create({
   uploadedPill: {
     backgroundColor: "#D9E8FF"
   },
+  failedPill: {
+    backgroundColor: "#FFD8D6"
+  },
   statusText: {
     fontSize: 15,
     fontWeight: "700"
@@ -152,6 +159,9 @@ const styles = StyleSheet.create({
   },
   uploadedText: {
     color: "#2F5FB8"
+  },
+  failedText: {
+    color: "#B42318"
   },
   preview: {
     color: "#7A8395",
