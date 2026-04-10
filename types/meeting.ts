@@ -1,5 +1,4 @@
-export type MeetingStatus = "processing" | "completed";
-export type MeetingSource = "mock" | "local";
+export type MeetingStatus = "processing" | "uploaded" | "completed";
 
 export type Meeting = {
   id: string;
@@ -9,9 +8,21 @@ export type Meeting = {
   preview: string;
   summary: string;
   transcript: string;
-  source: MeetingSource;
-  audioFileUri: string | null;
+  audioPath: string | null;
+  localAudioFileUri: string | null;
   createdAtIso: string;
+  updatedAtIso: string;
   durationMillis?: number;
   durationLabel?: string;
+};
+
+export type MeetingRecord = {
+  id: string;
+  created_at: string;
+  updated_at: string;
+  status: MeetingStatus;
+  audio_path: string | null;
+  duration_seconds: number | null;
+  summary: string | null;
+  transcript: string | null;
 };

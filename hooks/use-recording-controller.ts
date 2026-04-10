@@ -7,7 +7,7 @@ import {
 } from "expo-audio";
 import { useEffect, useState } from "react";
 
-import { formatRecordingTimer } from "../utils/constant";
+import { formatRecordingTimer } from "../utils/fun";
 
 export type RecordingResult = {
   audioFileUri: string;

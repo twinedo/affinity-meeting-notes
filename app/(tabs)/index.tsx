@@ -1,16 +1,29 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useEffect } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useRecordingController } from "../../hooks/use-recording-controller";
 import { useMeetingsStore } from "../../stores/meetings-store";
-import { createLocalMeeting, getMeetingStatusLabel } from "../../utils/constant";
+import { getMeetingStatusLabel } from "../../utils/fun";
 
 export default function HomeScreen() {
-  const addMeeting = useMeetingsStore((state) => state.addMeeting);
+  const createMeetingFromRecording = useMeetingsStore(
+    (state) => state.createMeetingFromRecording
+  );
+  const fetchMeetings = useMeetingsStore((state) => state.fetchMeetings);
+  const isLoading = useMeetingsStore((state) => state.isLoading);
+  const isSaving = useMeetingsStore((state) => state.isSaving);
   const meetings = useMeetingsStore((state) => state.meetings);
+  const storeErrorMessage = useMeetingsStore((state) => state.errorMessage);
   const recentMeeting = meetings[0];
   const recordingController = useRecordingController();
+  const combinedErrorMessage =
+    recordingController.errorMessage ?? storeErrorMessage;
+
+  useEffect(() => {
+    void fetchMeetings();
+  }, [fetchMeetings]);
 
   async function handleRecordPress() {
     if (recordingController.isRecording) {
@@ -20,12 +33,10 @@ export default function HomeScreen() {
         return;
       }
 
-      addMeeting(
-        createLocalMeeting({
-          audioFileUri: recordingResult.audioFileUri,
-          durationMillis: recordingResult.durationMillis
-        })
-      );
+      await createMeetingFromRecording({
+        audioFileUri: recordingResult.audioFileUri,
+        durationMillis: recordingResult.durationMillis
+      });
       return;
     }
 
@@ -42,18 +53,21 @@ export default function HomeScreen() {
 
         <View style={styles.recordButtonShadow}>
           <Pressable
-            disabled={recordingController.isBusy}
+            disabled={recordingController.isBusy || isSaving}
             onPress={handleRecordPress}
             style={[
               styles.recordButton,
               recordingController.isRecording && styles.recordButtonActive,
-              recordingController.isBusy && styles.recordButtonDisabled
+              (recordingController.isBusy || isSaving) &&
+                styles.recordButtonDisabled
             ]}
           >
             <Ionicons color="#FFFFFF" name="mic" size={62} />
             <Text style={styles.recordButtonLabel}>
               {recordingController.isRecording
                 ? "Stop Recording"
+                : isSaving
+                  ? "Uploading..."
                 : "Start Recording"}
             </Text>
           </Pressable>
@@ -62,17 +76,23 @@ export default function HomeScreen() {
         <Text style={styles.helperText}>
           {recordingController.isRecording
             ? `Recording now • ${recordingController.timerLabel}`
-            : "Tap to record. Recording stays local for now."}
+            : isSaving
+              ? "Uploading audio to Supabase and creating the meeting..."
+              : "Tap to record. Audio uploads to Supabase after you stop."}
         </Text>
 
-        {recordingController.errorMessage ? (
-          <Text style={styles.errorText}>{recordingController.errorMessage}</Text>
+        {combinedErrorMessage ? (
+          <Text style={styles.errorText}>{combinedErrorMessage}</Text>
         ) : null}
 
         <View style={styles.section}>
           <View style={styles.sectionDivider} />
           <Text style={styles.sectionTitle}>Recent Meeting</Text>
-          {recentMeeting ? (
+          {isLoading && !recentMeeting ? (
+            <View style={styles.emptyCard}>
+              <Text style={styles.emptyCardText}>Loading meetings...</Text>
+            </View>
+          ) : recentMeeting ? (
             <View style={styles.meetingCard}>
               <Text style={styles.meetingTitle}>{recentMeeting.title}</Text>
               <Text style={styles.meetingMeta}>
@@ -161,6 +181,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     marginTop: 12,
+    lineHeight: 20,
     textAlign: "center"
   },
   section: {

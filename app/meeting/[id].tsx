@@ -1,42 +1,49 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
+import { useEffect } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useMeetingsStore } from "../../stores/meetings-store";
-import { getMeetingStatusLabel } from "../../utils/constant";
+import { getMeetingStatusLabel } from "../../utils/fun";
 
 export default function MeetingDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const meetings = useMeetingsStore((state) => state.meetings);
-  const meeting = meetings.find((entry) => entry.id === id);
+  const errorMessage = useMeetingsStore((state) => state.errorMessage);
+  const fetchMeetingById = useMeetingsStore((state) => state.fetchMeetingById);
+  const isLoading = useMeetingsStore((state) => state.isLoading);
+  const meeting = useMeetingsStore((state) =>
+    state.meetings.find((entry) => entry.id === id)
+  );
+
+  useEffect(() => {
+    if (!id) {
+      return;
+    }
+
+    void fetchMeetingById(id);
+  }, [fetchMeetingById, id]);
+
+  if (!meeting && isLoading) {
+    return (
+      <SafeAreaView edges={["top"]} style={styles.safeArea}>
+        <Header />
+        <View style={styles.fallbackContainer}>
+          <Text style={styles.fallbackTitle}>Loading meeting...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   if (!meeting) {
     return (
       <SafeAreaView edges={["top"]} style={styles.safeArea}>
-        <View style={styles.header}>
-          <Pressable
-            hitSlop={10}
-            onPress={() => {
-              if (router.canGoBack()) {
-                router.back();
-                return;
-              }
-
-              router.replace("/(tabs)/meetings");
-            }}
-            style={styles.backButton}
-          >
-            <Ionicons color="#4A5565" name="chevron-back" size={26} />
-          </Pressable>
-          <Text style={styles.headerTitle}>Meeting Details</Text>
-          <View style={styles.headerSpacer} />
-        </View>
-
+        <Header />
         <View style={styles.fallbackContainer}>
           <Text style={styles.fallbackTitle}>Meeting not found</Text>
           <Text style={styles.fallbackBody}>
-            The selected mock meeting does not exist in local data.
+            {errorMessage ??
+              "The selected meeting could not be loaded from Supabase."}
           </Text>
         </View>
       </SafeAreaView>
@@ -47,24 +54,7 @@ export default function MeetingDetailScreen() {
 
   return (
     <SafeAreaView edges={["top"]} style={styles.safeArea}>
-      <View style={styles.header}>
-        <Pressable
-          hitSlop={10}
-          onPress={() => {
-            if (router.canGoBack()) {
-              router.back();
-              return;
-            }
-
-            router.replace("/(tabs)/meetings");
-          }}
-          style={styles.backButton}
-        >
-          <Ionicons color="#4A5565" name="chevron-back" size={26} />
-        </Pressable>
-        <Text style={styles.headerTitle}>Meeting Details</Text>
-        <View style={styles.headerSpacer} />
-      </View>
+      <Header />
 
       <ScrollView
         contentContainerStyle={styles.content}
@@ -85,8 +75,10 @@ export default function MeetingDetailScreen() {
         </Pressable>
 
         <View style={styles.card}>
-          {meeting.audioFileUri ? (
-            <Text style={styles.localFileText}>Local audio saved on device</Text>
+          {meeting.audioPath ? (
+            <Text style={styles.localFileText}>
+              Audio uploaded to Supabase Storage
+            </Text>
           ) : null}
 
           <Text style={styles.cardTitle}>Summary</Text>
@@ -228,3 +220,26 @@ const styles = StyleSheet.create({
     lineHeight: 30
   }
 });
+
+function Header() {
+  return (
+    <View style={styles.header}>
+      <Pressable
+        hitSlop={10}
+        onPress={() => {
+          if (router.canGoBack()) {
+            router.back();
+            return;
+          }
+
+          router.replace("/(tabs)/meetings");
+        }}
+        style={styles.backButton}
+      >
+        <Ionicons color="#4A5565" name="chevron-back" size={26} />
+      </Pressable>
+      <Text style={styles.headerTitle}>Meeting Details</Text>
+      <View style={styles.headerSpacer} />
+    </View>
+  );
+}
