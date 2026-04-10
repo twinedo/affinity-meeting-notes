@@ -4,7 +4,7 @@ create table if not exists public.meetings (
   id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now()),
-  status text not null check (status in ('processing', 'uploaded', 'completed')),
+  status text not null check (status in ('processing', 'uploaded', 'completed', 'failed')),
   audio_path text,
   duration_seconds integer,
   summary text,
