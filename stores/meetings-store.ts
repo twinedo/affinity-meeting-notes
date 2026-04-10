@@ -1,6 +1,7 @@
 import { create } from "zustand";
 
 import { Meeting } from "../types/meeting";
+import { useNotificationsStore } from "../stores/notifications-store";
 import { processMeeting } from "../utils/backend";
 import {
   createMeetingFromRecording,
@@ -40,7 +41,7 @@ export const useMeetingsStore = create<MeetingsStore>((set, get) => ({
       void processMeeting({
         audioUrl: createdMeeting.audioUrl,
         meetingId: meeting.id,
-        pushToken: null
+        pushToken: useNotificationsStore.getState().expoPushToken
       })
         .then(async () => {
           await get().fetchMeetingById(meeting.id);
