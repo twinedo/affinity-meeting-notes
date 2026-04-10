@@ -2,9 +2,12 @@ import { Link } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { meetings } from "../data/meetings";
+import { useMeetingsStore } from "../../stores/meetings-store";
+import { getMeetingStatusLabel } from "../../utils/constant";
 
 export default function MeetingsScreen() {
+  const meetings = useMeetingsStore((state) => state.meetings);
+
   return (
     <SafeAreaView edges={["top"]} style={styles.safeArea}>
       <View style={styles.header}>
@@ -35,7 +38,7 @@ export default function MeetingsScreen() {
                       : styles.processingText
                   ]}
                 >
-                  {meeting.statusLabel}
+                  {getMeetingStatusLabel(meeting.status)}
                 </Text>
               </View>
               <Text
@@ -74,9 +77,6 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 14,
     paddingTop: 14
-  },
-  container: {
-    flex: 1
   },
   card: {
     backgroundColor: "#FFFFFF",

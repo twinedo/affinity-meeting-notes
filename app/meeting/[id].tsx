@@ -3,10 +3,12 @@ import { router, useLocalSearchParams } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { meetings } from "../data/meetings";
+import { useMeetingsStore } from "../../stores/meetings-store";
+import { getMeetingStatusLabel } from "../../utils/constant";
 
 export default function MeetingDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const meetings = useMeetingsStore((state) => state.meetings);
   const meeting = meetings.find((entry) => entry.id === id);
 
   if (!meeting) {
@@ -41,8 +43,7 @@ export default function MeetingDetailScreen() {
     );
   }
 
-  const statusLabel =
-    meeting.status === "completed" ? "Completed" : "Processing";
+  const statusLabel = getMeetingStatusLabel(meeting.status);
 
   return (
     <SafeAreaView edges={["top"]} style={styles.safeArea}>
@@ -73,7 +74,9 @@ export default function MeetingDetailScreen() {
           <Text style={styles.metaTitle}>{meeting.scheduledAtLabel}</Text>
           <View style={styles.metaDivider} />
           <Text style={styles.metaText}>Status: {statusLabel}</Text>
-          <Text style={styles.metaText}>Duration: {meeting.durationLabel}</Text>
+          {meeting.durationLabel ? (
+            <Text style={styles.metaText}>Duration: {meeting.durationLabel}</Text>
+          ) : null}
         </View>
 
         <Pressable style={styles.playButton}>
@@ -82,6 +85,10 @@ export default function MeetingDetailScreen() {
         </Pressable>
 
         <View style={styles.card}>
+          {meeting.audioFileUri ? (
+            <Text style={styles.localFileText}>Local audio saved on device</Text>
+          ) : null}
+
           <Text style={styles.cardTitle}>Summary</Text>
           <View style={styles.cardDivider} />
           <Text style={styles.cardBody}>{meeting.summary}</Text>
@@ -128,9 +135,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     paddingTop: 18,
     paddingBottom: 28
-  },
-  container: {
-    flex: 1
   },
   fallbackContainer: {
     flex: 1,
@@ -184,6 +188,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     marginLeft: 10
+  },
+  localFileText: {
+    color: "#2F80ED",
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: 10
   },
   card: {
     backgroundColor: "#FFFFFF",

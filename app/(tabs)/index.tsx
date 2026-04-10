@@ -1,11 +1,36 @@
 import { Ionicons } from "@expo/vector-icons";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { meetings } from "../data/meetings";
+import { useRecordingController } from "../../hooks/use-recording-controller";
+import { useMeetingsStore } from "../../stores/meetings-store";
+import { createLocalMeeting, getMeetingStatusLabel } from "../../utils/constant";
 
 export default function HomeScreen() {
+  const addMeeting = useMeetingsStore((state) => state.addMeeting);
+  const meetings = useMeetingsStore((state) => state.meetings);
   const recentMeeting = meetings[0];
+  const recordingController = useRecordingController();
+
+  async function handleRecordPress() {
+    if (recordingController.isRecording) {
+      const recordingResult = await recordingController.stopRecording();
+
+      if (!recordingResult) {
+        return;
+      }
+
+      addMeeting(
+        createLocalMeeting({
+          audioFileUri: recordingResult.audioFileUri,
+          durationMillis: recordingResult.durationMillis
+        })
+      );
+      return;
+    }
+
+    await recordingController.startRecording();
+  }
 
   return (
     <SafeAreaView edges={["top"]} style={styles.safeArea}>
@@ -16,15 +41,33 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.recordButtonShadow}>
-          <View style={styles.recordButton}>
+          <Pressable
+            disabled={recordingController.isBusy}
+            onPress={handleRecordPress}
+            style={[
+              styles.recordButton,
+              recordingController.isRecording && styles.recordButtonActive,
+              recordingController.isBusy && styles.recordButtonDisabled
+            ]}
+          >
             <Ionicons color="#FFFFFF" name="mic" size={62} />
-            <Text style={styles.recordButtonLabel}>Start Recording</Text>
-          </View>
+            <Text style={styles.recordButtonLabel}>
+              {recordingController.isRecording
+                ? "Stop Recording"
+                : "Start Recording"}
+            </Text>
+          </Pressable>
         </View>
 
         <Text style={styles.helperText}>
-          Tap to record. Running in the background.
+          {recordingController.isRecording
+            ? `Recording now • ${recordingController.timerLabel}`
+            : "Tap to record. Recording stays local for now."}
         </Text>
+
+        {recordingController.errorMessage ? (
+          <Text style={styles.errorText}>{recordingController.errorMessage}</Text>
+        ) : null}
 
         <View style={styles.section}>
           <View style={styles.sectionDivider} />
@@ -32,7 +75,9 @@ export default function HomeScreen() {
           {recentMeeting ? (
             <View style={styles.meetingCard}>
               <Text style={styles.meetingTitle}>{recentMeeting.title}</Text>
-              <Text style={styles.meetingMeta}>{recentMeeting.statusLabel}</Text>
+              <Text style={styles.meetingMeta}>
+                {getMeetingStatusLabel(recentMeeting.status)}
+              </Text>
               <Text style={styles.meetingPreview}>{recentMeeting.preview}</Text>
             </View>
           ) : (
@@ -92,6 +137,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: 194
   },
+  recordButtonActive: {
+    backgroundColor: "#C92A2A"
+  },
+  recordButtonDisabled: {
+    opacity: 0.75
+  },
   recordButtonLabel: {
     color: "#FFFFFF",
     fontSize: 22,
@@ -103,6 +154,13 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: "500",
     marginTop: 36,
+    textAlign: "center"
+  },
+  errorText: {
+    color: "#C62828",
+    fontSize: 14,
+    fontWeight: "600",
+    marginTop: 12,
     textAlign: "center"
   },
   section: {
