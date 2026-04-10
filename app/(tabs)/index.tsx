@@ -2,7 +2,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { meetings } from "../data/meetings";
+
 export default function HomeScreen() {
+  const recentMeeting = meetings[0];
+
   return (
     <SafeAreaView edges={["top"]} style={styles.safeArea}>
       <View style={styles.container}>
@@ -25,9 +29,17 @@ export default function HomeScreen() {
         <View style={styles.section}>
           <View style={styles.sectionDivider} />
           <Text style={styles.sectionTitle}>Recent Meeting</Text>
-          <View style={styles.emptyCard}>
-            <Text style={styles.emptyCardText}>No meetings yet</Text>
-          </View>
+          {recentMeeting ? (
+            <View style={styles.meetingCard}>
+              <Text style={styles.meetingTitle}>{recentMeeting.title}</Text>
+              <Text style={styles.meetingMeta}>{recentMeeting.statusLabel}</Text>
+              <Text style={styles.meetingPreview}>{recentMeeting.preview}</Text>
+            </View>
+          ) : (
+            <View style={styles.emptyCard}>
+              <Text style={styles.emptyCardText}>No meetings yet</Text>
+            </View>
+          )}
         </View>
       </View>
     </SafeAreaView>
@@ -106,6 +118,36 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     marginBottom: 12
+  },
+  meetingCard: {
+    backgroundColor: "#FFFFFF",
+    borderColor: "#E6EBF3",
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    shadowColor: "#0F172A",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.04,
+    shadowRadius: 10,
+    elevation: 2
+  },
+  meetingTitle: {
+    color: "#364152",
+    fontSize: 16,
+    fontWeight: "700"
+  },
+  meetingMeta: {
+    color: "#2F80ED",
+    fontSize: 14,
+    fontWeight: "600",
+    marginTop: 8
+  },
+  meetingPreview: {
+    color: "#667085",
+    fontSize: 15,
+    lineHeight: 22,
+    marginTop: 8
   },
   emptyCard: {
     backgroundColor: "#FFFFFF",

@@ -7,10 +7,40 @@ import { meetings } from "../data/meetings";
 
 export default function MeetingDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const meeting =
-    meetings.find((entry) => entry.id === id) ??
-    meetings.find((entry) => entry.status === "processing") ??
-    meetings[0];
+  const meeting = meetings.find((entry) => entry.id === id);
+
+  if (!meeting) {
+    return (
+      <SafeAreaView edges={["top"]} style={styles.safeArea}>
+        <View style={styles.header}>
+          <Pressable
+            hitSlop={10}
+            onPress={() => {
+              if (router.canGoBack()) {
+                router.back();
+                return;
+              }
+
+              router.replace("/(tabs)/meetings");
+            }}
+            style={styles.backButton}
+          >
+            <Ionicons color="#4A5565" name="chevron-back" size={26} />
+          </Pressable>
+          <Text style={styles.headerTitle}>Meeting Details</Text>
+          <View style={styles.headerSpacer} />
+        </View>
+
+        <View style={styles.fallbackContainer}>
+          <Text style={styles.fallbackTitle}>Meeting not found</Text>
+          <Text style={styles.fallbackBody}>
+            The selected mock meeting does not exist in local data.
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   const statusLabel =
     meeting.status === "completed" ? "Completed" : "Processing";
 
@@ -101,6 +131,24 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1
+  },
+  fallbackContainer: {
+    flex: 1,
+    justifyContent: "center",
+    paddingHorizontal: 24
+  },
+  fallbackTitle: {
+    color: "#364152",
+    fontSize: 24,
+    fontWeight: "700",
+    textAlign: "center"
+  },
+  fallbackBody: {
+    color: "#667085",
+    fontSize: 16,
+    lineHeight: 24,
+    marginTop: 10,
+    textAlign: "center"
   },
   metaBlock: {
     alignItems: "center"
