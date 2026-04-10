@@ -143,12 +143,9 @@ async function registerForPushNotificationsAsync(input: {
         projectId
       })
     ).data;
-
-    console.info("Expo push token registered:", expoPushToken);
     input.setExpoPushToken(expoPushToken);
     input.setRegistrationError(null);
   } catch (error) {
-    console.warn("Expo push registration failed:", error);
     input.setExpoPushToken(null);
     input.setRegistrationError(
       error instanceof Error ? error.message : "Unable to register for push notifications."

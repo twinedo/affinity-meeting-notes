@@ -31,6 +31,9 @@ export default function MeetingsScreen() {
         {isLoading && meetings.length === 0 ? (
           <View style={styles.emptyCard}>
             <Text style={styles.emptyTitle}>Loading meetings...</Text>
+            <Text style={styles.emptyBody}>
+              Pulling the latest meetings from Supabase.
+            </Text>
           </View>
         ) : null}
         {hasLoaded && !isLoading && meetings.length === 0 ? (
@@ -75,7 +78,8 @@ export default function MeetingsScreen() {
               <Text
                 style={[
                   styles.preview,
-                  meeting.status === "completed" && styles.completedPreview
+                  meeting.status === "completed" && styles.completedPreview,
+                  meeting.status === "failed" && styles.failedPreview
                 ]}
               >
                 {meeting.preview}
@@ -171,6 +175,9 @@ const styles = StyleSheet.create({
   completedPreview: {
     color: "#364152",
     fontWeight: "600"
+  },
+  failedPreview: {
+    color: "#8F2D23"
   },
   errorText: {
     color: "#C62828",

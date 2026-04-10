@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+import { useNotificationsStore } from "../../stores/notifications-store";
 import { useRecordingController } from "../../hooks/use-recording-controller";
 import { useMeetingsStore } from "../../stores/meetings-store";
 import { getMeetingStatusLabel } from "../../utils/fun";
@@ -16,6 +17,12 @@ export default function HomeScreen() {
   const isSaving = useMeetingsStore((state) => state.isSaving);
   const meetings = useMeetingsStore((state) => state.meetings);
   const storeErrorMessage = useMeetingsStore((state) => state.errorMessage);
+  const notificationPermissionState = useNotificationsStore(
+    (state) => state.permissionState
+  );
+  const notificationRegistrationError = useNotificationsStore(
+    (state) => state.registrationError
+  );
   const recentMeeting = meetings[0];
   const recordingController = useRecordingController();
   const combinedErrorMessage =
@@ -83,6 +90,10 @@ export default function HomeScreen() {
 
         {combinedErrorMessage ? (
           <Text style={styles.errorText}>{combinedErrorMessage}</Text>
+        ) : null}
+        {notificationPermissionState !== "granted" &&
+        notificationRegistrationError ? (
+          <Text style={styles.infoText}>{notificationRegistrationError}</Text>
         ) : null}
 
         <View style={styles.section}>
@@ -182,6 +193,14 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginTop: 12,
     lineHeight: 20,
+    textAlign: "center"
+  },
+  infoText: {
+    color: "#667085",
+    fontSize: 14,
+    fontWeight: "500",
+    lineHeight: 20,
+    marginTop: 12,
     textAlign: "center"
   },
   section: {

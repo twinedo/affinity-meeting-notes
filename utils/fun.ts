@@ -6,7 +6,7 @@ import {
 
 export function getMeetingStatusLabel(status: MeetingStatus): string {
   if (status === "completed") {
-    return "Completed";
+    return "Ready";
   }
 
   if (status === "uploaded") {
@@ -14,7 +14,7 @@ export function getMeetingStatusLabel(status: MeetingStatus): string {
   }
 
   if (status === "failed") {
-    return "Failed";
+    return "Needs Retry";
   }
 
   return "Processing...";
@@ -81,14 +81,14 @@ function buildMeetingPreview(
   }
 
   if (status === "uploaded") {
-    return "Audio uploaded to Supabase Storage. Awaiting processing...";
+    return "Audio uploaded. Waiting for backend processing to start...";
   }
 
   if (status === "failed") {
-    return "Processing failed. Check backend logs and try again.";
+    return "Processing did not finish. Record again or check backend logs.";
   }
 
-  return "Transcript generation is still processing...";
+  return "Transcript and summary are being generated...";
 }
 
 function getPreviewExcerpt(

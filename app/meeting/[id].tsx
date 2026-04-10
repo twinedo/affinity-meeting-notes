@@ -30,6 +30,9 @@ export default function MeetingDetailScreen() {
         <Header />
         <View style={styles.fallbackContainer}>
           <Text style={styles.fallbackTitle}>Loading meeting...</Text>
+          <Text style={styles.fallbackBody}>
+            Pulling the latest details from Supabase.
+          </Text>
         </View>
       </SafeAreaView>
     );
@@ -69,15 +72,21 @@ export default function MeetingDetailScreen() {
           ) : null}
         </View>
 
-        <Pressable style={styles.playButton}>
+        <Pressable disabled style={[styles.playButton, styles.playButtonDisabled]}>
           <Ionicons color="#FFFFFF" name="play" size={24} />
-          <Text style={styles.playButtonText}>Play Audio</Text>
+          <Text style={styles.playButtonText}>Play Audio (Coming Soon)</Text>
         </Pressable>
 
         <View style={styles.card}>
           {meeting.audioPath ? (
             <Text style={styles.localFileText}>
               Audio uploaded to Supabase Storage
+            </Text>
+          ) : null}
+          {meeting.status === "failed" ? (
+            <Text style={styles.failureText}>
+              Processing did not complete for this meeting. You can review the
+              uploaded audio and try another recording run.
             </Text>
           ) : null}
 
@@ -175,6 +184,9 @@ const styles = StyleSheet.create({
     marginTop: 20,
     paddingVertical: 16
   },
+  playButtonDisabled: {
+    opacity: 0.65
+  },
   playButtonText: {
     color: "#FFFFFF",
     fontSize: 16,
@@ -185,6 +197,13 @@ const styles = StyleSheet.create({
     color: "#2F80ED",
     fontSize: 14,
     fontWeight: "600",
+    marginBottom: 10
+  },
+  failureText: {
+    color: "#B42318",
+    fontSize: 14,
+    fontWeight: "600",
+    lineHeight: 22,
     marginBottom: 10
   },
   card: {
