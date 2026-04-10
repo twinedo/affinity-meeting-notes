@@ -1,0 +1,12 @@
+node_modules/
+.expo/
+dist/
+build/
+.DS_Store
+
+/android
+/ios
+
+bun.lock
+
+expo-env.d.ts

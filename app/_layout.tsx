@@ -7,7 +7,7 @@ export default function RootLayout() {
       <StatusBar style="auto" />
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="meeting/[id]" options={{ title: "Meeting" }} />
+        <Stack.Screen name="meeting/[id]" options={{ headerShown: false }} />
       </Stack>
     </>
   );
