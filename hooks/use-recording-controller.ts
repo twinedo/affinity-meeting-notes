@@ -74,7 +74,10 @@ export function useRecordingController() {
 
       await setAudioModeAsync({
         allowsRecording: true,
-        playsInSilentMode: true
+        allowsBackgroundRecording: true,
+        interruptionMode: "doNotMix",
+        playsInSilentMode: true,
+        shouldPlayInBackground: true
       });
 
       await recorder.prepareToRecordAsync();
@@ -100,7 +103,9 @@ export function useRecordingController() {
     try {
       await recorder.stop();
       await setAudioModeAsync({
-        allowsRecording: false
+        allowsBackgroundRecording: false,
+        allowsRecording: false,
+        shouldPlayInBackground: false
       });
 
       const nextState = recorder.getStatus();

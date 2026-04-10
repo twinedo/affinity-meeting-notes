@@ -6,7 +6,7 @@ Minimal Expo SDK 54 baseline for the Affinity Labs take-home task.
 
 - Expo Router setup
 - Required route skeleton
-- Empty `plugins/` folder
+- Custom config plugin support under `plugins/`
 - Empty `backend/` folder
 
 ## Not Included Yet
@@ -15,7 +15,6 @@ Minimal Expo SDK 54 baseline for the Affinity Labs take-home task.
 - Background recording
 - Push notifications
 - FastAPI backend implementation
-- Native config plugin implementation
 
 ## Project Structure
 
@@ -52,3 +51,5 @@ README.md
 ## Notes
 
 This scaffold stays intentionally small so the required architecture can be layered in later without reworking the routing setup.
+
+A custom Expo config plugin is used for native background-audio configuration because the take-home requires background recording support on iOS and Android, and those native settings must be applied during prebuild.
