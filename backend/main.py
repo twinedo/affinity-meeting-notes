@@ -51,9 +51,12 @@ def process_meeting(payload: ProcessMeetingRequest):
         transcript = transcribe_audio(str(payload.audio_url))
         summary = summarize_transcript(transcript)
         update_meeting_completed(payload.meeting_id, transcript, summary)
-        notify_processing_result(
-            payload.push_token, str(payload.meeting_id), "completed"
-        )
+        try:
+            notify_processing_result(
+                payload.push_token, str(payload.meeting_id), "completed"
+            )
+        except Exception:
+            pass
 
         return ProcessMeetingResponse(
             detail="Meeting processed successfully.",
@@ -65,9 +68,6 @@ def process_meeting(payload: ProcessMeetingRequest):
     except Exception as error:
         try:
             update_meeting_failed(payload.meeting_id)
-            notify_processing_result(
-                payload.push_token, str(payload.meeting_id), "failed"
-            )
         except Exception:
             pass
 
