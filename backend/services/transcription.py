@@ -72,12 +72,14 @@ def _format_transcript_with_speakers(client: OpenAI, transcript: str) -> str:
                 "role": "system",
                 "content": (
                     "You format meeting transcripts into readable speaker turns. "
-                    "Rewrite the transcript with each likely speaker turn on a new line. "
-                    "Label speakers as Speaker 1, Speaker 2, Speaker 3, and so on. "
+                    "If the transcript appears to contain multiple speakers, rewrite it with each likely speaker "
+                    "turn on a new line and label speakers as Speaker 1, Speaker 2, Speaker 3, and so on. "
+                    "If the transcript appears to contain only one speaker, do not add any speaker labels. "
+                    "Instead, keep it as plain transcript text and insert paragraph breaks at natural pauses, "
+                    "topic changes, or sentence groups so it reads cleanly. "
                     "Preserve the original language and wording as much as possible. "
                     "Do not translate, summarize, or add facts. "
                     "Preserve clear non-speech cues such as [laughter] and [applause]. "
-                    "If there is only one speaker, keep Speaker 1 consistently. "
                     "Return plain text only."
                 ),
             },
