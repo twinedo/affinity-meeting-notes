@@ -1,5 +1,6 @@
 import { Link } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import * as ExpoLinking from "expo-linking";
 import { useEffect } from "react";
 import {
   Image,
@@ -17,10 +18,6 @@ import { useRecordingController } from "../../hooks/use-recording-controller";
 import { useMeetingsStore } from "../../stores/meetings-store";
 import { APP_COLORS } from "../../utils/constant";
 import { getMeetingStatusLabel } from "../../utils/fun";
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(Math.max(value, min), max);
-}
 
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
@@ -43,35 +40,18 @@ export default function HomeScreen() {
   const recordingController = useRecordingController();
   const combinedErrorMessage =
     recordingController.errorMessage ?? storeErrorMessage;
-  const screenScale = clamp(
-    Math.min(width / 390, (height - insets.top - insets.bottom - 64) / 720),
-    0.8,
-    1
-  );
-  const horizontalPadding = Math.round(24 * screenScale);
-  const topPadding = Math.max(8, Math.round(insets.top + 6 * screenScale));
-  const bottomPadding = Math.max(16, Math.round(24 * screenScale));
-  const logoWidth = Math.round(60 * screenScale);
-  const logoHeight = Math.round(20 * screenScale);
-  const logoPaddingHorizontal = Math.max(8, Math.round(10 * screenScale));
-  const logoPaddingVertical = Math.max(6, Math.round(8 * screenScale));
-  const logoBorderWidth = Math.max(2, Math.round(5 * screenScale));
-  const heroMarginTop = Math.round(20 * screenScale);
-  const titleFontSize = Math.max(26, Math.round(32 * screenScale));
-  const subtitleFontSize = Math.max(14, Math.round(18 * screenScale));
-  const recordButtonSize = Math.max(132, Math.round(164 * screenScale));
-  const recordIconSize = Math.max(48, Math.round(62 * screenScale));
-  const recordButtonLabelSize = Math.max(14, Math.round(16 * screenScale));
-  const recordButtonMarginTop = Math.max(28, Math.round(54 * screenScale));
-  const helperMarginTop = Math.max(20, Math.round(36 * screenScale));
-  const helperFontSize = Math.max(14, Math.round(17 * screenScale));
-  const sectionPaddingTop = Math.max(18, Math.round(30 * screenScale));
-  const sectionTitleSize = Math.max(15, Math.round(16 * screenScale));
-  const sectionDividerMarginBottom = Math.max(12, Math.round(20 * screenScale));
-  const meetingTitleSize = Math.max(15, Math.round(16 * screenScale));
-  const meetingMetaSize = Math.max(13, Math.round(14 * screenScale));
-  const meetingPreviewSize = Math.max(14, Math.round(15 * screenScale));
-  const meetingPreviewLineHeight = Math.max(20, Math.round(22 * screenScale));
+  const availableHeight = height - insets.top - insets.bottom;
+  const isCompactHeight = availableHeight < 720;
+  const isNarrowWidth = width < 360;
+  const horizontalPadding = isNarrowWidth ? 20 : 24;
+  const topPadding = insets.top + 8;
+  const bottomPadding = isCompactHeight ? 16 : 24;
+  const heroMarginTop = isCompactHeight ? 12 : 20;
+  const recordButtonSize = isCompactHeight ? 144 : 164;
+  const recordIconSize = isCompactHeight ? 52 : 62;
+  const recordButtonMarginTop = isCompactHeight ? 28 : 44;
+  const helperMarginTop = isCompactHeight ? 20 : 32;
+  const sectionPaddingTop = isCompactHeight ? 20 : 28;
 
   useEffect(() => {
     void fetchMeetings();
@@ -95,26 +75,32 @@ export default function HomeScreen() {
     await recordingController.startRecording();
   }
 
+  async function handleLogoPress() {
+    await ExpoLinking.openURL("https://affinitylabs.ai/");
+  }
+
   return (
     <View style={styles.safeArea}>
-      <View
+      <Pressable
+        accessibilityRole="link"
+        hitSlop={8}
+        onPress={handleLogoPress}
         style={[
           styles.logoContainer,
           {
-            borderWidth: logoBorderWidth,
-            marginLeft: Math.max(8, Math.round(8 * screenScale)),
+            marginLeft: 8,
             marginTop: topPadding,
-            paddingHorizontal: logoPaddingHorizontal,
-            paddingVertical: logoPaddingVertical
+            paddingHorizontal: 10,
+            paddingVertical: 8
           }
         ]}
       >
         <Image
           source={require("../../assets/logo-text.png")}
-          style={[styles.logo, { height: logoHeight, width: logoWidth }]}
+          style={styles.logo}
           resizeMode="contain"
         />
-      </View>
+      </Pressable>
       <ScrollView
         contentContainerStyle={[
           styles.contentContainer,
@@ -128,12 +114,8 @@ export default function HomeScreen() {
       >
         <View>
           <View style={[styles.hero, { marginTop: heroMarginTop }]}>
-            <Text style={[styles.title, { fontSize: titleFontSize }]}>
-              In-Person Notes
-            </Text>
-            <Text style={[styles.subtitle, { fontSize: subtitleFontSize }]}>
-              Record meetings, get notes
-            </Text>
+            <Text style={styles.title}>In-Person Notes</Text>
+            <Text style={styles.subtitle}>Record meetings, get notes</Text>
           </View>
 
           <View
@@ -154,9 +136,7 @@ export default function HomeScreen() {
               ]}
             >
               <Ionicons color="#FFFFFF" name="mic" size={recordIconSize} />
-              <Text
-                style={[styles.recordButtonLabel, { fontSize: recordButtonLabelSize }]}
-              >
+              <Text style={styles.recordButtonLabel}>
                 {recordingController.isRecording
                   ? "Stop Recording"
                   : isSaving
@@ -167,10 +147,7 @@ export default function HomeScreen() {
           </View>
 
           <Text
-            style={[
-              styles.helperText,
-              { fontSize: helperFontSize, marginTop: helperMarginTop }
-            ]}
+            style={[styles.helperText, { marginTop: helperMarginTop }]}
           >
             {recordingController.isRecording
               ? `Recording now • ${recordingController.timerLabel}`
@@ -192,12 +169,10 @@ export default function HomeScreen() {
           <View
             style={[
               styles.sectionDivider,
-              { marginBottom: sectionDividerMarginBottom }
+              { marginBottom: 16 }
             ]}
           />
-          <Text style={[styles.sectionTitle, { fontSize: sectionTitleSize }]}>
-            Recent Meeting
-          </Text>
+          <Text style={styles.sectionTitle}>Recent Meeting</Text>
           {isLoading && !recentMeeting ? (
             <View style={styles.emptyCard}>
               <Text style={styles.emptyCardText}>Loading meetings...</Text>
@@ -205,21 +180,13 @@ export default function HomeScreen() {
           ) : recentMeeting ? (
             <Link href={`/meeting/${recentMeeting.id}`} asChild>
               <Pressable style={styles.meetingCard}>
-                <Text style={[styles.meetingTitle, { fontSize: meetingTitleSize }]}>
-                  {recentMeeting.title}
-                </Text>
-                <Text style={[styles.meetingMeta, { fontSize: meetingMetaSize }]}>
+                <Text style={styles.meetingTitle}>{recentMeeting.title}</Text>
+                <Text style={styles.meetingMeta}>
                   {getMeetingStatusLabel(recentMeeting.status)}
                 </Text>
                 <Text
                   numberOfLines={2}
-                  style={[
-                    styles.meetingPreview,
-                    {
-                      fontSize: meetingPreviewSize,
-                      lineHeight: meetingPreviewLineHeight
-                    }
-                  ]}
+                  style={styles.meetingPreview}
                 >
                   {recentMeeting.preview}
                 </Text>
@@ -258,6 +225,7 @@ const styles = StyleSheet.create({
     backgroundColor: APP_COLORS.textPrimary,
     borderColor: APP_COLORS.border,
     borderRadius: 14,
+    borderWidth: 5
   },
   hero: {
     alignItems: "center"
