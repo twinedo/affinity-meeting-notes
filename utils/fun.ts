@@ -10,7 +10,7 @@ export function getMeetingStatusLabel(status: MeetingStatus): string {
   }
 
   if (status === "uploaded") {
-    return "Uploaded";
+    return "Getting Ready";
   }
 
   if (status === "failed") {
@@ -81,11 +81,11 @@ function buildMeetingPreview(
   }
 
   if (status === "uploaded") {
-    return "Audio uploaded. Waiting for backend processing to start...";
+    return "Your recording is saved. We're getting your notes ready.";
   }
 
   if (status === "failed") {
-    return "Processing did not finish. Record again or check backend logs.";
+    return "We couldn't finish this meeting. Please try recording again.";
   }
 
   return "Transcript and summary are being generated...";
