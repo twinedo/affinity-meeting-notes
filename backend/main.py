@@ -1,4 +1,5 @@
 from uuid import UUID
+import logging
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -29,6 +30,7 @@ class ProcessMeetingResponse(BaseModel):
 
 
 app = FastAPI(title="Affinity Meeting Notes Backend")
+logger = logging.getLogger(__name__)
 
 app.add_middleware(
     CORSMiddleware,
@@ -66,6 +68,7 @@ def process_meeting(payload: ProcessMeetingRequest):
             transcript=transcript,
         )
     except Exception as error:
+        logger.exception("Failed to process meeting %s", payload.meeting_id)
         try:
             update_meeting_failed(payload.meeting_id)
         except Exception:

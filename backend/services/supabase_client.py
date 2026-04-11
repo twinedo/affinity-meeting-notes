@@ -26,6 +26,12 @@ def get_supabase_client() -> Client:
             "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in backend environment."
         )
 
+    if SUPABASE_SERVICE_ROLE_KEY.startswith("sb_publishable_"):
+        raise RuntimeError(
+            "SUPABASE_SERVICE_ROLE_KEY is using a publishable key. "
+            "The backend must use the Supabase service role or secret key."
+        )
+
     _supabase_client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
     return _supabase_client
 
