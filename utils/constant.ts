@@ -15,3 +15,20 @@ export const DEFAULT_EMPTY_TRANSCRIPT =
 
 export const SUPABASE_MISSING_ENV_MESSAGE =
   "Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY to enable meeting sync.";
+
+export const APP_COLORS = {
+  background: "#F7F1E4",
+  backgroundElevated: "#FBF6EC",
+  surface: "#FFFDF8",
+  surfaceAccent: "#F4E9D3",
+  border: "#E6D8BE",
+  divider: "#E9DECC",
+  textPrimary: "#3E3427",
+  textSecondary: "#736551",
+  textMuted: "#95866F",
+  accent: "#A97A2E",
+  accentSoft: "#F1DEB6",
+  accentText: "#7A571E",
+  tabInactive: "#8A7A62",
+  shadow: "#8E7750"
+} as const;

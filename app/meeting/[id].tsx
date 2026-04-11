@@ -1,13 +1,16 @@
 import { Ionicons } from "@expo/vector-icons";
+import { setAudioModeAsync, useAudioPlayer, useAudioPlayerStatus } from "expo-audio";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useMeetingsStore } from "../../stores/meetings-store";
-import { getMeetingStatusLabel } from "../../utils/fun";
+import { APP_COLORS } from "../../utils/constant";
+import { formatDurationLabel, getMeetingStatusLabel } from "../../utils/fun";
 
 export default function MeetingDetailScreen() {
+  const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const errorMessage = useMeetingsStore((state) => state.errorMessage);
   const fetchMeetingById = useMeetingsStore((state) => state.fetchMeetingById);
@@ -15,6 +18,9 @@ export default function MeetingDetailScreen() {
   const meeting = useMeetingsStore((state) =>
     state.meetings.find((entry) => entry.id === id)
   );
+  const audioSource = meeting?.audioUrl ?? meeting?.localAudioFileUri ?? null;
+  const player = useAudioPlayer(audioSource, { updateInterval: 250 });
+  const playerStatus = useAudioPlayerStatus(player);
 
   useEffect(() => {
     if (!id) {
@@ -26,22 +32,22 @@ export default function MeetingDetailScreen() {
 
   if (!meeting && isLoading) {
     return (
-      <SafeAreaView edges={["top"]} style={styles.safeArea}>
-        <Header />
+      <View style={styles.safeArea}>
+        <Header topInset={insets.top} />
         <View style={styles.fallbackContainer}>
           <Text style={styles.fallbackTitle}>Loading meeting...</Text>
           <Text style={styles.fallbackBody}>
             Pulling the latest details from Supabase.
           </Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   if (!meeting) {
     return (
-      <SafeAreaView edges={["top"]} style={styles.safeArea}>
-        <Header />
+      <View style={styles.safeArea}>
+        <Header topInset={insets.top} />
         <View style={styles.fallbackContainer}>
           <Text style={styles.fallbackTitle}>Meeting not found</Text>
           <Text style={styles.fallbackBody}>
@@ -49,15 +55,50 @@ export default function MeetingDetailScreen() {
               "The selected meeting could not be loaded from Supabase."}
           </Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   const statusLabel = getMeetingStatusLabel(meeting.status);
+  const resolvedDurationMillis = Math.max(
+    meeting.durationMillis ?? 0,
+    Math.round(playerStatus.duration * 1000)
+  );
+  const resolvedDurationLabel =
+    resolvedDurationMillis > 0
+      ? formatDurationLabel(resolvedDurationMillis)
+      : null;
+  const canPlayAudio = Boolean(audioSource) && playerStatus.isLoaded;
+
+  async function handlePlayPress() {
+    if (!audioSource) {
+      return;
+    }
+
+    await setAudioModeAsync({
+      allowsRecording: false,
+      playsInSilentMode: true,
+      shouldPlayInBackground: true
+    });
+
+    if (
+      playerStatus.duration > 0 &&
+      playerStatus.currentTime >= playerStatus.duration
+    ) {
+      player.seekTo(0);
+    }
+
+    if (playerStatus.playing) {
+      player.pause();
+      return;
+    }
+
+    player.play();
+  }
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.safeArea}>
-      <Header />
+    <View style={styles.safeArea}>
+      <Header topInset={insets.top} />
 
       <ScrollView
         contentContainerStyle={styles.content}
@@ -67,21 +108,36 @@ export default function MeetingDetailScreen() {
           <Text style={styles.metaTitle}>{meeting.scheduledAtLabel}</Text>
           <View style={styles.metaDivider} />
           <Text style={styles.metaText}>Status: {statusLabel}</Text>
-          {meeting.durationLabel ? (
-            <Text style={styles.metaText}>Duration: {meeting.durationLabel}</Text>
+          {resolvedDurationLabel ? (
+            <Text style={styles.metaText}>Duration: {resolvedDurationLabel}</Text>
           ) : null}
         </View>
 
-        <Pressable disabled style={[styles.playButton, styles.playButtonDisabled]}>
-          <Ionicons color="#FFFFFF" name="play" size={24} />
-          <Text style={styles.playButtonText}>Play Audio (Coming Soon)</Text>
+        <Pressable
+          disabled={!canPlayAudio}
+          onPress={() => {
+            void handlePlayPress();
+          }}
+          style={[styles.playButton, !canPlayAudio && styles.playButtonDisabled]}
+        >
+          <Ionicons
+            color="#FFFFFF"
+            name={playerStatus.playing ? "pause" : "play"}
+            size={24}
+          />
+          <Text style={styles.playButtonText}>
+            {playerStatus.playing ? "Pause Audio" : "Play Audio"}
+          </Text>
         </Pressable>
+        {!canPlayAudio ? (
+          <Text style={styles.audioHintText}>
+            Audio is still loading or unavailable for this meeting.
+          </Text>
+        ) : null}
 
         <View style={styles.card}>
           {meeting.audioPath ? (
-            <Text style={styles.localFileText}>
-              Audio uploaded to Supabase Storage
-            </Text>
+            <Text style={styles.localFileText}>Recording saved for this meeting</Text>
           ) : null}
           {meeting.status === "failed" ? (
             <Text style={styles.failureText}>
@@ -90,27 +146,28 @@ export default function MeetingDetailScreen() {
             </Text>
           ) : null}
 
-          <Text style={styles.cardTitle}>Summary</Text>
-          <View style={styles.cardDivider} />
-          <Text style={styles.cardBody}>{meeting.summary}</Text>
-
-          <Text style={[styles.cardTitle, styles.sectionHeading]}>Transcript</Text>
+          <Text style={styles.cardTitle}> Transcript</Text>
           <View style={styles.cardDivider} />
           <Text style={styles.cardBody}>{meeting.transcript}</Text>
+
+          <Text style={[styles.cardTitle, styles.sectionHeading]}>Summary</Text>
+          <View style={styles.cardDivider} />
+          <Text style={styles.cardBody}>{meeting.summary}</Text>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#F7F9FE"
+    backgroundColor: APP_COLORS.background
   },
   header: {
     alignItems: "center",
-    borderBottomColor: "#E6EBF3",
+    backgroundColor: APP_COLORS.backgroundElevated,
+    borderBottomColor: APP_COLORS.border,
     borderBottomWidth: 1,
     flexDirection: "row",
     justifyContent: "space-between",
@@ -125,14 +182,15 @@ const styles = StyleSheet.create({
     width: 28
   },
   headerTitle: {
-    color: "#2F3747",
-    fontSize: 26,
+    color: APP_COLORS.textPrimary,
+    fontSize: 24,
     fontWeight: "700"
   },
   headerSpacer: {
     width: 28
   },
   content: {
+    backgroundColor: APP_COLORS.background,
     paddingHorizontal: 18,
     paddingTop: 18,
     paddingBottom: 28
@@ -143,13 +201,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24
   },
   fallbackTitle: {
-    color: "#364152",
+    color: APP_COLORS.textPrimary,
     fontSize: 24,
     fontWeight: "700",
     textAlign: "center"
   },
   fallbackBody: {
-    color: "#667085",
+    color: APP_COLORS.textSecondary,
     fontSize: 16,
     lineHeight: 24,
     marginTop: 10,
@@ -159,25 +217,25 @@ const styles = StyleSheet.create({
     alignItems: "center"
   },
   metaTitle: {
-    color: "#364152",
+    color: APP_COLORS.textPrimary,
     fontSize: 20,
     fontWeight: "700"
   },
   metaDivider: {
-    backgroundColor: "#E6EBF3",
+    backgroundColor: APP_COLORS.divider,
     height: 1,
     marginVertical: 12,
     width: "100%"
   },
   metaText: {
-    color: "#4C5667",
+    color: APP_COLORS.textSecondary,
     fontSize: 16,
     fontWeight: "700",
     lineHeight: 28
   },
   playButton: {
     alignItems: "center",
-    backgroundColor: "#2F80ED",
+    backgroundColor: APP_COLORS.accent,
     borderRadius: 14,
     flexDirection: "row",
     justifyContent: "center",
@@ -187,6 +245,13 @@ const styles = StyleSheet.create({
   playButtonDisabled: {
     opacity: 0.65
   },
+  audioHintText: {
+    color: APP_COLORS.textSecondary,
+    fontSize: 14,
+    fontWeight: "500",
+    marginTop: 10,
+    textAlign: "center"
+  },
   playButtonText: {
     color: "#FFFFFF",
     fontSize: 16,
@@ -194,7 +259,7 @@ const styles = StyleSheet.create({
     marginLeft: 10
   },
   localFileText: {
-    color: "#2F80ED",
+    color: APP_COLORS.accent,
     fontSize: 14,
     fontWeight: "600",
     marginBottom: 10
@@ -207,21 +272,21 @@ const styles = StyleSheet.create({
     marginBottom: 10
   },
   card: {
-    backgroundColor: "#FFFFFF",
-    borderColor: "#E6EBF3",
+    backgroundColor: APP_COLORS.surface,
+    borderColor: APP_COLORS.border,
     borderRadius: 16,
     borderWidth: 1,
     marginTop: 18,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    shadowColor: "#0F172A",
+    shadowColor: APP_COLORS.shadow,
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.04,
+    shadowOpacity: 0.08,
     shadowRadius: 10,
     elevation: 2
   },
   cardTitle: {
-    color: "#364152",
+    color: APP_COLORS.textPrimary,
     fontSize: 18,
     fontWeight: "700"
   },
@@ -229,20 +294,20 @@ const styles = StyleSheet.create({
     marginTop: 20
   },
   cardDivider: {
-    backgroundColor: "#E6EBF3",
+    backgroundColor: APP_COLORS.divider,
     height: 1,
     marginVertical: 12
   },
   cardBody: {
-    color: "#4C5667",
+    color: APP_COLORS.textSecondary,
     fontSize: 16,
     lineHeight: 30
   }
 });
 
-function Header() {
+function Header({ topInset }: { topInset: number }) {
   return (
-    <View style={styles.header}>
+    <View style={[styles.header, { paddingTop: topInset + 10 }]}>
       <Pressable
         hitSlop={10}
         onPress={() => {
@@ -255,7 +320,7 @@ function Header() {
         }}
         style={styles.backButton}
       >
-        <Ionicons color="#4A5565" name="chevron-back" size={26} />
+        <Ionicons color={APP_COLORS.textSecondary} name="chevron-back" size={26} />
       </Pressable>
       <Text style={styles.headerTitle}>Meeting Details</Text>
       <View style={styles.headerSpacer} />

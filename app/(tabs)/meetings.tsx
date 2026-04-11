@@ -1,12 +1,14 @@
 import { Link } from "expo-router";
 import { useEffect } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useMeetingsStore } from "../../stores/meetings-store";
+import { APP_COLORS } from "../../utils/constant";
 import { getMeetingStatusLabel } from "../../utils/fun";
 
 export default function MeetingsScreen() {
+  const insets = useSafeAreaInsets();
   const errorMessage = useMeetingsStore((state) => state.errorMessage);
   const fetchMeetings = useMeetingsStore((state) => state.fetchMeetings);
   const hasLoaded = useMeetingsStore((state) => state.hasLoaded);
@@ -18,8 +20,8 @@ export default function MeetingsScreen() {
   }, [fetchMeetings]);
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.safeArea}>
-      <View style={styles.header}>
+    <View style={styles.safeArea}>
+      <View style={[styles.header, { paddingTop: insets.top + 10 }]}>
         <Text style={styles.headerTitle}>Meetings</Text>
       </View>
 
@@ -88,47 +90,50 @@ export default function MeetingsScreen() {
           </Link>
         ))}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#F7F9FE"
+    backgroundColor: APP_COLORS.background
   },
   header: {
     alignItems: "center",
-    borderBottomColor: "#E6EBF3",
+    backgroundColor: APP_COLORS.backgroundElevated,
+    borderBottomColor: APP_COLORS.border,
     borderBottomWidth: 1,
     paddingBottom: 14,
     paddingTop: 10
   },
   headerTitle: {
-    color: "#2F3747",
-    fontSize: 28,
+    color: APP_COLORS.textPrimary,
+    fontSize: 24,
     fontWeight: "700"
   },
   content: {
+    backgroundColor: APP_COLORS.background,
     paddingHorizontal: 14,
-    paddingTop: 14
+    paddingTop: 14,
+    paddingBottom: 24
   },
   card: {
-    backgroundColor: "#FFFFFF",
-    borderColor: "#E6EBF3",
+    backgroundColor: APP_COLORS.surface,
+    borderColor: APP_COLORS.border,
     borderRadius: 16,
     borderWidth: 1,
     marginBottom: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    shadowColor: "#0F172A",
+    shadowColor: APP_COLORS.shadow,
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.04,
+    shadowOpacity: 0.08,
     shadowRadius: 10,
     elevation: 2
   },
   cardTitle: {
-    color: "#364152",
+    color: APP_COLORS.textPrimary,
     fontSize: 18,
     fontWeight: "700"
   },
@@ -140,7 +145,7 @@ const styles = StyleSheet.create({
     paddingVertical: 5
   },
   processingPill: {
-    backgroundColor: "#FFE186"
+    backgroundColor: APP_COLORS.accentSoft
   },
   completedPill: {
     backgroundColor: "#CFF5C7"
@@ -156,7 +161,7 @@ const styles = StyleSheet.create({
     fontWeight: "700"
   },
   processingText: {
-    color: "#8A6A00"
+    color: APP_COLORS.accentText
   },
   completedText: {
     color: "#2C8B4B"
@@ -168,12 +173,12 @@ const styles = StyleSheet.create({
     color: "#B42318"
   },
   preview: {
-    color: "#7A8395",
+    color: APP_COLORS.textSecondary,
     fontSize: 16,
     marginTop: 12
   },
   completedPreview: {
-    color: "#364152",
+    color: APP_COLORS.textPrimary,
     fontWeight: "600"
   },
   failedPreview: {
@@ -187,26 +192,26 @@ const styles = StyleSheet.create({
     marginBottom: 12
   },
   emptyCard: {
-    backgroundColor: "#FFFFFF",
-    borderColor: "#E6EBF3",
+    backgroundColor: APP_COLORS.surface,
+    borderColor: APP_COLORS.border,
     borderRadius: 16,
     borderWidth: 1,
     marginBottom: 12,
     paddingHorizontal: 16,
     paddingVertical: 18,
-    shadowColor: "#0F172A",
+    shadowColor: APP_COLORS.shadow,
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.04,
+    shadowOpacity: 0.08,
     shadowRadius: 10,
     elevation: 2
   },
   emptyTitle: {
-    color: "#364152",
+    color: APP_COLORS.textPrimary,
     fontSize: 16,
     fontWeight: "700"
   },
   emptyBody: {
-    color: "#667085",
+    color: APP_COLORS.textSecondary,
     fontSize: 15,
     lineHeight: 22,
     marginTop: 8
