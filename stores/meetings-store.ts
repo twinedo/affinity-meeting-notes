@@ -5,6 +5,7 @@ import { useNotificationsStore } from "../stores/notifications-store";
 import { processMeeting } from "../utils/backend";
 import {
   createMeetingFromRecording,
+  deleteMeeting as deleteMeetingRecord,
   getMeetingById,
   listMeetings
 } from "../utils/meeting-repository";
@@ -16,6 +17,7 @@ type CreateMeetingInput = {
 
 type MeetingsStore = {
   createMeetingFromRecording: (input: CreateMeetingInput) => Promise<Meeting | null>;
+  deleteMeeting: (id: string) => Promise<boolean>;
   errorMessage: string | null;
   fetchMeetingById: (id: string) => Promise<Meeting | null>;
   fetchMeetings: () => Promise<void>;
@@ -60,6 +62,28 @@ export const useMeetingsStore = create<MeetingsStore>((set, get) => ({
         isSaving: false
       });
       return null;
+    }
+  },
+  async deleteMeeting(id) {
+    set({ errorMessage: null, isSaving: true });
+
+    try {
+      await deleteMeetingRecord(id);
+      const meetings = await listMeetings();
+
+      set({
+        hasLoaded: true,
+        isSaving: false,
+        meetings
+      });
+
+      return true;
+    } catch (error) {
+      set({
+        errorMessage: getErrorMessage(error),
+        isSaving: false
+      });
+      return false;
     }
   },
   errorMessage: null,

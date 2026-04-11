@@ -123,6 +123,49 @@ export async function createMeetingFromRecording(
   };
 }
 
+export async function deleteMeeting(id: string): Promise<void> {
+  await ensureAnonymousSession();
+  const client = getSupabaseClient();
+  const { data, error } = await client
+    .from(MEETINGS_TABLE)
+    .select("audio_path")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error) {
+    throw error;
+  }
+
+  const audioPath = (data as Pick<MeetingRecord, "audio_path"> | null)?.audio_path ?? null;
+
+  if (audioPath) {
+    const { error: storageError } = await client.storage
+      .from(SUPABASE_STORAGE_BUCKET)
+      .remove([audioPath]);
+
+    if (storageError) {
+      throw storageError;
+    }
+  }
+
+  const { data: deletedMeeting, error: deleteError } = await client
+    .from(MEETINGS_TABLE)
+    .delete()
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
+
+  if (deleteError) {
+    throw deleteError;
+  }
+
+  if (!deletedMeeting) {
+    throw new Error(
+      "Meeting could not be deleted. Run backend/step6.sql in Supabase SQL Editor to enable delete policies."
+    );
+  }
+}
+
 function getSupabaseClient() {
   if (!supabase) {
     throw new Error(supabaseConfigError ?? "Supabase is not configured.");
