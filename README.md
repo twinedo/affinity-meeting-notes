@@ -82,10 +82,17 @@ This creates:
 
 - the `meetings` table
 - an `updated_at` trigger
-- basic anon policies for the take-home flow
+- anonymous-auth-ready RLS policies
 - the `meeting-audio` storage bucket
-- storage policies
-- seed meeting rows for quick verification
+- user-scoped storage policies
+
+5. In Supabase Auth providers, enable `Anonymous Sign-Ins`.
+6. If your database was initialized before anonymous auth + user-scoped RLS were added, run [backend/step6.sql](/Users/twinedo/Documents/affinity/affinity-meeting-notes/backend/step6.sql).
+
+Notes:
+
+- The app silently creates an anonymous Supabase user on launch. There is no visible login form.
+- Existing meeting rows created before the auth migration may not be visible to new anonymous sessions unless you manually associate them with a user.
 
 ## Mobile App Setup
 

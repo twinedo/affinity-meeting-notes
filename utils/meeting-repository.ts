@@ -4,7 +4,12 @@ import { decode } from "base64-arraybuffer";
 import { Meeting, MeetingRecord } from "../types/meeting";
 import { MEETINGS_TABLE, SUPABASE_STORAGE_BUCKET } from "./constant";
 import { mapMeetingRecordToMeeting } from "./fun";
-import { supabase, supabaseConfigError } from "./supabase";
+import {
+  ensureAnonymousSession,
+  getAuthenticatedUserId,
+  supabase,
+  supabaseConfigError
+} from "./supabase";
 
 type RecordingUploadInput = {
   audioFileUri: string;
@@ -17,6 +22,7 @@ export type CreatedMeetingRecord = {
 };
 
 export async function listMeetings(): Promise<Meeting[]> {
+  await ensureAnonymousSession();
   const client = getSupabaseClient();
   const { data, error } = await client
     .from(MEETINGS_TABLE)
@@ -29,12 +35,15 @@ export async function listMeetings(): Promise<Meeting[]> {
     throw error;
   }
 
-  return ((data ?? []) as MeetingRecord[]).map((record) =>
-    mapMeetingRecordToMeeting(record, getAudioUrl(record.audio_path))
+  return Promise.all(
+    ((data ?? []) as MeetingRecord[]).map(async (record) =>
+      mapMeetingRecordToMeeting(record, await getAudioUrl(record.audio_path))
+    )
   );
 }
 
 export async function getMeetingById(id: string): Promise<Meeting | null> {
+  await ensureAnonymousSession();
   const client = getSupabaseClient();
   const { data, error } = await client
     .from(MEETINGS_TABLE)
@@ -54,15 +63,16 @@ export async function getMeetingById(id: string): Promise<Meeting | null> {
 
   return mapMeetingRecordToMeeting(
     data as MeetingRecord,
-    getAudioUrl((data as MeetingRecord).audio_path)
+    await getAudioUrl((data as MeetingRecord).audio_path)
   );
 }
 
 export async function createMeetingFromRecording(
   input: RecordingUploadInput
 ): Promise<CreatedMeetingRecord> {
+  const userId = await getAuthenticatedUserId();
   const client = getSupabaseClient();
-  const audioPath = buildStoragePath(input.audioFileUri);
+  const audioPath = buildStoragePath(input.audioFileUri, userId);
   const fileBase64 = await FileSystem.readAsStringAsync(input.audioFileUri, {
     encoding: FileSystem.EncodingType.Base64
   });
@@ -85,10 +95,11 @@ export async function createMeetingFromRecording(
       duration_seconds: Math.max(1, Math.round(input.durationMillis / 1000)),
       status: "uploaded",
       summary: "",
-      transcript: ""
+      transcript: "",
+      user_id: userId
     })
     .select(
-      "id, created_at, updated_at, status, audio_path, duration_seconds, summary, transcript"
+      "id, created_at, updated_at, status, audio_path, duration_seconds, summary, transcript, user_id"
     )
     .single();
 
@@ -96,7 +107,7 @@ export async function createMeetingFromRecording(
     throw error;
   }
 
-  const audioUrl = getAudioUrl(audioPath);
+  const audioUrl = await getAudioUrl(audioPath);
 
   if (!audioUrl) {
     throw new Error("Unable to create a public URL for the uploaded audio file.");
@@ -120,25 +131,29 @@ function getSupabaseClient() {
   return supabase;
 }
 
-function buildStoragePath(audioFileUri: string): string {
+function buildStoragePath(audioFileUri: string, userId: string): string {
   const extension = getAudioFileExtension(audioFileUri);
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
   const suffix = Math.random().toString(36).slice(2, 8);
 
-  return `recordings/${timestamp}-${suffix}.${extension}`;
+  return `recordings/${userId}/${timestamp}-${suffix}.${extension}`;
 }
 
-function getAudioUrl(audioPath: string | null): string | null {
+async function getAudioUrl(audioPath: string | null): Promise<string | null> {
   if (!audioPath) {
     return null;
   }
 
   const client = getSupabaseClient();
-  const { data } = client.storage
+  const { data, error } = await client.storage
     .from(SUPABASE_STORAGE_BUCKET)
-    .getPublicUrl(audioPath);
+    .createSignedUrl(audioPath, 60 * 60);
 
-  return data.publicUrl;
+  if (error) {
+    throw error;
+  }
+
+  return data.signedUrl;
 }
 
 function getAudioFileExtension(audioFileUri: string): string {

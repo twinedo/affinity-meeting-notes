@@ -1,35 +1,7 @@
-create extension if not exists pgcrypto;
-
-create table if not exists public.meetings (
-  id uuid primary key default gen_random_uuid(),
-  user_id uuid references auth.users(id) on delete cascade,
-  created_at timestamptz not null default timezone('utc', now()),
-  updated_at timestamptz not null default timezone('utc', now()),
-  status text not null check (status in ('processing', 'uploaded', 'completed', 'failed')),
-  audio_path text,
-  duration_seconds integer,
-  summary text,
-  transcript text
-);
+alter table public.meetings
+add column if not exists user_id uuid references auth.users(id) on delete cascade;
 
 create index if not exists meetings_user_id_idx on public.meetings (user_id);
-
-create or replace function public.set_meetings_updated_at()
-returns trigger
-language plpgsql
-as $$
-begin
-  new.updated_at = timezone('utc', now());
-  return new;
-end;
-$$;
-
-drop trigger if exists set_meetings_updated_at on public.meetings;
-
-create trigger set_meetings_updated_at
-before update on public.meetings
-for each row
-execute function public.set_meetings_updated_at();
 
 alter table public.meetings enable row level security;
 
