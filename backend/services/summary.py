@@ -29,7 +29,9 @@ def summarize_transcript(transcript: str) -> str:
                 "content": (
                     "You summarize meeting transcripts. "
                     "Return 2 concise sentences covering the main decisions and next steps. "
-                    "Keep the summary in the same language as the transcript and do not translate it."
+                    "Keep the summary in the same language as the transcript and do not translate it. "
+                    "Mention non-speech cues only when they materially affect the meeting context. "
+                    "Speaker labels such as Speaker 1 and Speaker 2 are transcript structure, not summary content."
                 ),
             },
             {
