@@ -126,7 +126,7 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         style={styles.container}
       >
-        <View style={styles.topContent}>
+        <View>
           <View style={[styles.hero, { marginTop: heroMarginTop }]}>
             <Text style={[styles.title, { fontSize: titleFontSize }]}>
               In-Person Notes
@@ -175,8 +175,8 @@ export default function HomeScreen() {
             {recordingController.isRecording
               ? `Recording now • ${recordingController.timerLabel}`
               : isSaving
-                ? "Uploading audio to Supabase and starting backend processing..."
-                : "Tap to record. Audio uploads first, then the backend processes notes."}
+                ? "Saving your recording and preparing your meeting notes..."
+                : "Tap to record and turn your conversation into notes."}
           </Text>
 
           {combinedErrorMessage ? (
@@ -248,9 +248,6 @@ const styles = StyleSheet.create({
   contentContainer: {
     flexGrow: 1,
     justifyContent: "space-between"
-  },
-  topContent: {
-    alignItems: "stretch"
   },
   logo: {
     height: 20,

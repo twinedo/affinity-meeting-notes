@@ -30,30 +30,18 @@ export default function MeetingDetailScreen() {
     void fetchMeetingById(id);
   }, [fetchMeetingById, id]);
 
-  if (!meeting && isLoading) {
-    return (
-      <View style={styles.safeArea}>
-        <Header topInset={insets.top} />
-        <View style={styles.fallbackContainer}>
-          <Text style={styles.fallbackTitle}>Loading meeting...</Text>
-          <Text style={styles.fallbackBody}>
-            Pulling the latest details from Supabase.
-          </Text>
-        </View>
-      </View>
-    );
-  }
-
   if (!meeting) {
+    const fallbackTitle = isLoading ? "Loading meeting..." : "Meeting not found";
+    const fallbackBody = isLoading
+      ? "Pulling the latest details from Supabase."
+      : errorMessage ?? "The selected meeting could not be loaded from Supabase.";
+
     return (
       <View style={styles.safeArea}>
         <Header topInset={insets.top} />
         <View style={styles.fallbackContainer}>
-          <Text style={styles.fallbackTitle}>Meeting not found</Text>
-          <Text style={styles.fallbackBody}>
-            {errorMessage ??
-              "The selected meeting could not be loaded from Supabase."}
-          </Text>
+          <Text style={styles.fallbackTitle}>{fallbackTitle}</Text>
+          <Text style={styles.fallbackBody}>{fallbackBody}</Text>
         </View>
       </View>
     );
@@ -146,7 +134,7 @@ export default function MeetingDetailScreen() {
             </Text>
           ) : null}
 
-          <Text style={styles.cardTitle}> Transcript</Text>
+          <Text style={styles.cardTitle}>Transcript</Text>
           <View style={styles.cardDivider} />
           <Text style={styles.cardBody}>{meeting.transcript}</Text>
 

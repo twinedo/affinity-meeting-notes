@@ -4,7 +4,7 @@ import { StatusBar } from "expo-status-bar";
 import { useNotifications } from "../hooks/use-notifications";
 import { APP_COLORS } from "../utils/constant";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
 
 export default function RootLayout() {
   useNotifications();
